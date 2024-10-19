@@ -1,9 +1,9 @@
 import * as fs from "fs";
 import EventEmitter from "events";
 import FormData from "@stguten/form-data";
-import { getFilenameFromContentDisposition, onProgress } from "../utils/download.utils.js";
-import { HttpStatusCodes } from "../enums/http.enum.js";
 import pixeldrain from "../config/axios.config.js";
+import { HttpStatusCodes } from "../enums/http.enum.js";
+import { getFilenameFromContentDisposition, onProgress } from "../utils/download.utils.js";
 
 const fileEvent = new EventEmitter();
 

@@ -16,7 +16,9 @@
     "pixel",
     "drain",
     "download",
-    "file upload"
+    "file upload",
+    "pd-js",
+    "pixel drain"
   ],
   "author": "Gutemberg a.k.a StGuten",
   "license": "MIT",
@@ -27,5 +29,16 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stguten/pd-js.git"
+  },
+  "contributors": [
+    {
+      "name": "Gutemberg Pinheiro",
+      "email": "st.gutem@gmail.com",
+      "url": "https://github.com/stguten/form-data"
+    }
+  ]
 }

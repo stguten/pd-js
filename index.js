@@ -10,7 +10,7 @@ class PixelDrainApi {
 
     /**
      * Make a new instance of the PixelDrain API.
-     * @param {String} Pixeldrain API token.
+     * @param {String} token Pixeldrain API token.
      */
     constructor(token) {
         if (PixelDrainApi.instance) {
@@ -140,6 +140,35 @@ class PixelDrainApi {
     async getUserLists() {
         return await this.#user.getUserLists();
     }
+
+    /**
+     * If you need to get a new token, you can use this method. Useless if you already have a token.
+     * @param {String} username Username used for login
+     * @param {String} password Password used for login
+     * @param {String} appName Some name to identify the app. Ex: @stguten/pd-js
+     * @returns {String} Return a new token
+     */
+    async getNewToken(username, password, appName = null) {
+        return await this.#user.getNewToken(username, password, appName);
+    }
+    
+    /**
+     * Return all api keys from authenticated user
+     * @returns {Object} Returns a JSON object with user API.
+     */
+    async myApiKeys(){
+        return await this.#user.myApiKeys();
+    }
+
+    /**
+     * Delete a api key from authenticated user
+     * @param {String} apiKey Pixeldrain API token
+     * @returns {Object} Returns a JSON object with user API.
+     */
+    async deleteApiKey(apiKey){
+        return await this.#user.deleteApiKey(apiKey);
+    }
+    
 }
 
 export default PixelDrainApi;

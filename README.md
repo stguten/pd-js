@@ -1,5 +1,4 @@
-````markdown
-# pd-js
+# @stguten/pd-js
 
 Uma descrição curta e cativante da sua biblioteca. Explique o que ela faz e por que alguém gostaria de usá-la.
 
@@ -10,7 +9,6 @@ Você pode instalar esta biblioteca usando o npm. Certifique-se de ter o Node.js
 ```bash
 npm install @stguten/pd-js
 ```
-````
 
 ## Uso
 
@@ -19,7 +17,7 @@ Aqui você deve fornecer exemplos de código e explicações claras sobre como u
 ```javascript
 const minhaBiblioteca = require('minha-biblioteca');
 
-// Exemplo de uso
+// Exemplo de *uso*
 const resultado = minhaBiblioteca.minhaFuncao('parâmetro');
 
 console.log(resultado);
