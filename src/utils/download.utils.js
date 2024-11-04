@@ -2,7 +2,7 @@
 function onProgress(progressEvent) {
   const { loaded, total } = progressEvent;
   const percentCompleted = Math.round((loaded * 100) / total);
-  process.stdout.write(`Progresso do download: ${percentCompleted}%\r`);
+  process.stdout.write(`Download Progress: ${percentCompleted}%\r`);
 }
 
 function getFilenameFromContentDisposition(contentDispositionHeader) {

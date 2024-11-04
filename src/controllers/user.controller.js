@@ -7,35 +7,7 @@ export default class User {
   constructor(token) {
     this.token = token;
   }
-
-
-  async getUserFiles() {
-    try {
-      const { data } = await pixeldrain.get("/user/files", {
-        headers: {
-          "Authorization": `Basic ${Buffer.from(this.token).toString('base64')}`
-        }
-      });
-      return data;
-    } catch (error) {
-      throw new Error(HttpStatusCodes[error.response.data.value]);
-    }
-  }
-
-
-  async getUserLists() {
-    try {
-      const { data } = await pixeldrain.get("/user/lists", {
-        headers: {
-          "Authorization": `Basic ${Buffer.from(this.token).toString('base64')}`
-        }
-      });
-      return data;
-    } catch (error) {
-      throw new Error(HttpStatusCodes[error.response.data.value]);
-    }
-  }
-
+  
   async getNewToken(username, password, appName = null) {
     const formData = new FormData();
     formData.append('username', username);
@@ -46,7 +18,10 @@ export default class User {
       const { data } = await pixeldrain.post("/user/login", formData);
       return data['auth_key'];
     } catch (error) {
-      throw new Error(HttpStatusCodes[error.response.data.value]);
+      if (error.response) {
+        throw new Error(HttpStatusCodes[error.response.data.value]);
+      }
+      throw new Error(error.message);
     }
   }
 
@@ -59,7 +34,10 @@ export default class User {
       });
       return data.map()
     } catch (error) {
-      throw new Error(HttpStatusCodes[error.response.data.value]);
+      if (error.response) {
+        throw new Error(HttpStatusCodes[error.response.data.value]);
+      }
+      throw new Error(error.message);
     }
   }
 
@@ -72,8 +50,12 @@ export default class User {
       });
       return data;
     } catch (error) {
-      throw new Error(HttpStatusCodes[error.response.data.value]);
+      if (error.response) {
+        throw new Error(HttpStatusCodes[error.response.data.value]);
+      }
+      throw new Error(error.message);
     }
 
   }
+  
 }

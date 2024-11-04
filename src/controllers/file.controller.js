@@ -1,15 +1,30 @@
 import * as fs from "fs";
 import EventEmitter from "events";
+import path from "path";
 import FormData from "@stguten/form-data";
 import pixeldrain from "../config/axios.config.js";
 import { HttpStatusCodes } from "../enums/http.enum.js";
-import { getFilenameFromContentDisposition, onProgress } from "../utils/download.utils.js";
-
-const fileEvent = new EventEmitter();
+import * as downloadUtils from "../utils/download.utils.js";
 
 export default class File {
     constructor(token) {
         this.token = token;
+    }
+
+    async getUserFiles() {
+        try {
+            const { data } = await pixeldrain.get("/user/files", {
+                headers: {
+                    "Authorization": `Basic ${Buffer.from(this.token).toString('base64')}`
+                }
+            });
+            return data;
+        } catch (error) {
+            if (error.response) {
+                throw new Error(HttpStatusCodes[error.response.data.value]);
+            }
+            throw new Error(error.message);
+        }
     }
 
     async postFile(file, nameFile) {
@@ -26,7 +41,10 @@ export default class File {
             });
             return data;
         } catch (error) {
-            throw new Error(HttpStatusCodes[error.response.data.value] || "UNKNOW ERROR");
+            if (error.response) {
+                throw new Error(HttpStatusCodes[error.response.data.value]);
+            }
+            throw new Error(error.message);
         }
     }
 
@@ -34,57 +52,67 @@ export default class File {
         const fileContent = fs.createReadStream(file);
 
         try {
-            const { data } = await axios.put(`https://pixeldrain.com/api/file/${nameFile}`, fileContent, {
+            const { data } = await axios.put(`/file/${nameFile}`, fileContent, {
                 headers: {
                     'Authorization': `Basic ${Buffer.from(this.token).toString('base64')}`
                 }
             });
             return data;
         } catch (error) {
-            throw new Error(HttpStatusCodes[error.response.data.value]);
+            if (error.response) {
+                throw new Error(HttpStatusCodes[error.response.data.value]);
+            }
+            throw new Error(error.message);
         }
     }
 
-
-    async getFileById(folder, id, download) {
+    async getFileById(id, folder, download = false) {
+        const checkFile = await this.getFileInfo(id);
         if (!id) throw new Error("Please insert a file Id.");
         if (!fs.existsSync(folder)) throw new Error("Folder not found.");
+        if (checkFile.success === false) throw new Error("File not found.");
 
         try {
             const resultado = await pixeldrain.get(`/file/${id}${(download ? "?download" : "")}`, {
                 responseType: "stream",
-                onDownloadProgress: onProgress
+                onDownloadProgress: downloadUtils.onProgress
             });
 
             const file = resultado.data;
-            const fileLocation = folder + getFilenameFromContentDisposition(resultado.headers['content-disposition']);
+            const fileLocation = path.resolve(folder, downloadUtils.getFilenameFromContentDisposition(resultado.headers['content-disposition']));
             const writer = fs.createWriteStream(fileLocation);
 
             file.on("end", () => {
                 writer.end();
-                fileEvent.emit("downloadComplete", fileLocation);
+                console.log("Download complete.");
             });
 
             file.pipe(writer);
         } catch (error) {
-            throw new Error(HttpStatusCodes[error.response.data.value]);
+            if (error.response) {
+                throw new Error(HttpStatusCodes[error.response.data.value]);
+            }
+            throw new Error(error.message);
         }
     }
 
-
     async getFileInfo(id) {
-        if (!id) throw new Error("Please check the parameters.");
+        if (!id) throw new Error("Please insert a file Id.");
         try {
             const { data } = await pixeldrain.get(`/file/${id}/info`);
             return data;
         } catch (error) {
-            throw new Error(HttpStatusCodes[error.response.data.value]);
+            if (error.response) {
+                throw new Error(HttpStatusCodes[error.response.data.value]);
+            }
+            throw new Error(error.message);
         }
     }
 
-
     async getfileThumb(id, width, height) {
-        if (!id) throw new Error("Please check the parameters.");
+        const checkFile = await this.getFileInfo(id);
+        if (!id) throw new Error("Please insert a file Id.");
+        if (checkFile.success === false) throw new Error("File not found.");
         if (width != height || (width || height < 16) || (width || height > 128)) throw new Error("The value must be between 16 and 128.");
         if (width % 16 != 0 || height != 0) throw new Error("The width and height parameters need to be a multiple of 16");
 
@@ -92,13 +120,17 @@ export default class File {
             const { data } = await pixeldrain.get(`/file/${id}/thumbnail?width=${width}&height=${height}`);
             return data;
         } catch (error) {
-            throw new Error(HttpStatusCodes[error.response.data.value]);
+            if (error.response) {
+                throw new Error(HttpStatusCodes[error.response.data.value]);
+            }
+            throw new Error(error.message);
         }
     }
 
-
     async deleteFile(id) {
-        if (!id) throw new Error("Please check the parameters.");
+        const checkFile = await this.getFileInfo(id);
+        if (!id) throw new Error("Please insert a file Id.");
+        if (checkFile.success === false) throw new Error("File not found.");
         try {
             const { data } = await pixeldrain.delete(`/file/${id}`, {
                 headers: {
@@ -107,7 +139,11 @@ export default class File {
             });
             return data;
         } catch (error) {
-            throw new Error(HttpStatusCodes[error.response.data.value]);
+            if (error.response) {
+                throw new Error(HttpStatusCodes[error.response.data.value]);
+            }
+            throw new Error(error.message);
         }
     }
+    
 }

@@ -1,11 +1,13 @@
 import List from "./src/controllers/list.controller.js";
 import File from "./src/controllers/file.controller.js";
 import User from "./src/controllers/user.controller.js";
+import Misc from "./src/controllers/misc.controller.js";
 
 class PixelDrainApi {
     #list;
     #file;
     #user;
+    #misc;
     static instance;
 
     /**
@@ -16,33 +18,20 @@ class PixelDrainApi {
         if (PixelDrainApi.instance) {
             return PixelDrainApi.instance;
         }
-        this.#list = new List(token);
         this.#file = new File(token);
+        this.#list = new List(token);
         this.#user = new User(token);
+        this.#misc = new Misc(token);
 
         PixelDrainApi.instance = this;
     }
 
     /**
-     * Returns information about a file list and the files in it.
-     * @param {String} id ID of the list
-     * @returns {Object} The API will return some basic information about every file. 
-     * Every file also has a “detail_href” field which contains a URL to the info API of the file. 
-     * Follow that link to get more information about the file like size, checksum, mime type, etc. 
-     * The address is relative to the API URL and should be appended to the end.
+     * Return all files from authenticated user
+     * @returns {Object} Returns a JSON object with all user files.
      */
-    async getList(id) {
-        return await this.#list.getList(id);
-    }
-
-    /**
-     * Creates a list of files that can be viewed together on the file viewer page.
-     * @param {String} title Name of the file to upload
-     * @param {Object} files File is not linked to user if true
-     * @returns {String} Return a id of list created
-     */
-    async postList(title, files) {
-        return await this.#list.postList(title, files);
+    async getUserFiles() {
+        return await this.#file.getUserFiles();
     }
 
     /**
@@ -78,20 +67,20 @@ class PixelDrainApi {
      * 
      * Pixeldrain also includes a virus scanner. 
      * If a virus has been detected in a file the user will also have to fill in a captcha to download it.
-     * @param {String} folder The folder path to save the file
      * @param {String} id ID of the file to request
+     * @param {String} folder The folder path to save the file
      * @param {boolean} download Option to sends attachment header instead of inline
      * @returns {String} Filepath of downloaded file
      */
-    async getFileById(folder, id, download) {
-        return await this.#file.getFileById(folder, id, download);
+    async getFileById(id, folder, download) {
+        return await this.#file.getFileById(id, folder, download);
     }
 
     /**
      * Returns information about one or more files. 
      * You can also put a comma separated list of file IDs in the URL and it will return an array of file info, instead of a single object. 
      * There’s a limit of 1000 files per request.
-     * @param {String|Array} id ID of the file or an array with various IDs.
+     * @param {String} id ID of the file or an array with various IDs.
      * @returns {Object} Return a Object with one or more file infos.
      */
     async getFileInfo(id) {
@@ -126,19 +115,63 @@ class PixelDrainApi {
     }
 
     /**
-     * Return all files from authenticated user
-     * @returns {Object} Returns a JSON object with all user files.
-     */
-    async getUserFiles() {
-        return await this.#user.getUserFiles();
-    }
-
-    /**
      * Return all lists from authenticated user
      * @returns {Object} Returns a JSON object with all user lists.
      */
     async getUserLists() {
-        return await this.#user.getUserLists();
+        return await this.#list.getUserLists();
+    }
+
+    /**
+     * Returns information about a file list and the files in it.
+     * @param {String} id ID of the list
+     * @returns {Object} The API will return some basic information about every file. 
+     * Every file also has a “detail_href” field which contains a URL to the info API of the file. 
+     * Follow that link to get more information about the file like size, checksum, mime type, etc. 
+     * The address is relative to the API URL and should be appended to the end.
+     */
+    async getList(id) {
+        return await this.#list.getList(id);
+    }
+
+    /**
+     * Creates a list of files that can be viewed together on the file viewer page.
+     * @param {String} title Name of the file to upload
+     * @param {Object} files File is not linked to user if true
+     * @param {boolean} anonymous Option to set the list as anonymous
+     * @returns {String} Return a id of list created
+     */
+    async createList(title, files, anonymous) {
+        return await this.#list.createList(title, files, anonymous);
+    }   
+
+    /**
+     * Download all files from a list.
+     * @param {String} id ID of the list     * 
+     */
+    async downloadAllFiles(id) {
+        return await this.#list.downloadAllFiles(id);
+    }
+
+    /**
+     * Update a file list with new title, files or anonymous flag.
+     * @param {String} id ID of the list.
+     * @param {String} title title of the list.
+     * @param {Array} files Some Files to add in list, Optional.
+     * @param {boolean} anonymous Anonymous flag, Optional.
+     * @returns A Object with the list updated.
+     */
+    async updateList(id, title, files, anonymous) {
+        return await this.#list.updateList(id, title, files, anonymous);
+    }
+
+    /**
+     * Delete a File List.
+     * @param {String} id ID of the list.
+     * @returns A Object with status of operation.
+     */
+    async deleteList(id) {  
+        return await this.#list.deleteList(id);
     }
 
     /**
@@ -148,15 +181,15 @@ class PixelDrainApi {
      * @param {String} appName Some name to identify the app. Ex: @stguten/pd-js
      * @returns {String} Return a new token
      */
-    async getNewToken(username, password, appName = null) {
+    async getNewToken(username, password, appName) {
         return await this.#user.getNewToken(username, password, appName);
     }
-    
+
     /**
      * Return all api keys from authenticated user
      * @returns {Object} Returns a JSON object with user API.
      */
-    async myApiKeys(){
+    async myApiKeys() {
         return await this.#user.myApiKeys();
     }
 
@@ -165,10 +198,17 @@ class PixelDrainApi {
      * @param {String} apiKey Pixeldrain API token
      * @returns {Object} Returns a JSON object with user API.
      */
-    async deleteApiKey(apiKey){
+    async deleteApiKey(apiKey) {
         return await this.#user.deleteApiKey(apiKey);
     }
-    
-}
 
+    /**
+     * Generate a QR Code for a link
+     * @param {String} url URL to generate QR Code 
+     */
+    async generateQRCode(url) {
+        return await this.#misc.generateQRCode(url);
+    }
+
+}
 export default PixelDrainApi;
